@@ -1,4 +1,8 @@
-version: '2'
+version: '3'
+
+networks:
+  frappe-link:
+
 services:
   mariadb:
     image: "mariadb"
@@ -7,39 +11,36 @@ services:
       - MYSQL_USER=root
     volumes:
       - ./conf/mariadb-conf.d:/etc/mysql/conf.d
-    ports:
-      - "3307:3306" #mariadb-port
     container_name: mariadb
+    networks:
+      - frappe-link
 
   redis-cache:
     image: redis:alpine
-
     volumes:
       - ./redis-conf/redis_cache.conf:/etc/conf.d/redis.conf
-
     command: ["redis-server","/etc/conf.d/redis.conf"]
-
     container_name: redis-cache
+    networks:
+      - frappe-link
 
   redis-queue:
     image: redis:alpine
-
     volumes:
       - ./redis-conf/redis_queue.conf:/etc/conf.d/redis.conf
-
     command: ["redis-server","/etc/conf.d/redis.conf"]
-
     container_name: redis-queue
+    networks:
+      - frappe-link
 
   redis-socketio:
     image: redis:alpine
-
     volumes:
       - ./redis-conf/redis_socketio.conf:/etc/conf.d/redis.conf
-
     command: ["redis-server","/etc/conf.d/redis.conf"]
-
     container_name: redis-socketio
+    networks:
+      - frappe-link
 
   frappe:
     volumes:
@@ -51,14 +52,11 @@ services:
       - "6787:6787" #file_watcher_port
     stdin_open: true
     tty: true
-    links:
-      - redis-cache
-      - redis-queue
-      - redis-socketio
-      - mariadb
     depends_on:
       - mariadb
       - redis-cache
       - redis-queue
       - redis-socketio
     container_name: frappe
+    networks:
+      - frappe-link
